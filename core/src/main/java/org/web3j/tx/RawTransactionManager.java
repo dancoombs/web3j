@@ -14,6 +14,7 @@ package org.web3j.tx;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.List;
 
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Hash;
@@ -152,7 +153,8 @@ public class RawTransactionManager extends TransactionManager {
                         value,
                         data,
                         maxPriorityFeePerGas,
-                        maxFeePerGas);
+                        maxFeePerGas,
+                        List.of());
 
         return signAndSend(rawTransaction);
     }
