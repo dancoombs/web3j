@@ -151,6 +151,8 @@ public class TransactionDecoderTest {
         assertEquals(transaction1559.getTo(), resultTransaction1559.getTo());
         assertEquals(transaction1559.getValue(), resultTransaction1559.getValue());
         assertEquals(transaction1559.getData(), resultTransaction1559.getData());
+        assertIterableEquals(
+                transaction1559.getAccessList(), resultTransaction1559.getAccessList());
     }
 
     @Test
@@ -177,6 +179,8 @@ public class TransactionDecoderTest {
         assertEquals(transaction1559.getTo(), resultTransaction1559.getTo());
         assertEquals(transaction1559.getValue(), resultTransaction1559.getValue());
         assertEquals(transaction1559.getData(), resultTransaction1559.getData());
+        assertIterableEquals(
+                transaction1559.getAccessList(), resultTransaction1559.getAccessList());
 
         assertTrue(result instanceof SignedRawTransaction);
         final SignedRawTransaction signedResult = (SignedRawTransaction) result;
@@ -192,14 +196,26 @@ public class TransactionDecoderTest {
     }
 
     private static RawTransaction createEip1559RawTransaction() {
-        return RawTransaction.createEtherTransaction(
+        List<AccessListObject> accessList =
+                List.of(
+                        new AccessListObject(
+                                "0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
+                                List.of(
+                                        "0x0000000000000000000000000000000000000000000000000000000000000003",
+                                        "0x0000000000000000000000000000000000000000000000000000000000000007")),
+                        new AccessListObject(
+                                "0xbb9bc244d798123fde783fcc1c72d3bb8c189413", List.of()));
+
+        return RawTransaction.createTransaction(
                 3L,
                 BigInteger.valueOf(0),
                 BigInteger.valueOf(30000),
                 "0x627306090abab3a6e1400e9345bc60c78a8bef57",
                 BigInteger.valueOf(123),
+                "0x00000111110000",
                 BigInteger.valueOf(5678),
-                BigInteger.valueOf(1100000));
+                BigInteger.valueOf(1100000),
+                accessList);
     }
 
     @Test

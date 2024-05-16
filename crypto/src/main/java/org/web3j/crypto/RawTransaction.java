@@ -104,7 +104,8 @@ public class RawTransaction {
             BigInteger value,
             String data,
             BigInteger maxPriorityFeePerGas,
-            BigInteger maxFeePerGas) {
+            BigInteger maxFeePerGas,
+            List<AccessListObject> accessList) {
 
         return new RawTransaction(
                 Transaction1559.createTransaction(
@@ -115,7 +116,8 @@ public class RawTransaction {
                         value,
                         data,
                         maxPriorityFeePerGas,
-                        maxFeePerGas));
+                        maxFeePerGas,
+                        accessList));
     }
 
     public static RawTransaction createTransaction(

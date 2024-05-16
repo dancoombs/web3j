@@ -16,6 +16,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.web3j.crypto.AccessListObject;
 import org.web3j.crypto.Sign;
 import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
@@ -30,11 +31,12 @@ import static org.web3j.crypto.transaction.type.TransactionType.EIP1559;
  * For the specification, refer to p4 of the <a href="http://gavwood.com/paper.pdf">yellow
  * paper</a>.
  */
-public class Transaction1559 extends LegacyTransaction implements ITransaction {
+public class Transaction1559 extends LegacyTransaction {
 
     private long chainId;
     private BigInteger maxPriorityFeePerGas;
     private BigInteger maxFeePerGas;
+    private List<AccessListObject> accessList;
 
     public Transaction1559(
             long chainId,
@@ -44,11 +46,13 @@ public class Transaction1559 extends LegacyTransaction implements ITransaction {
             BigInteger value,
             String data,
             BigInteger maxPriorityFeePerGas,
-            BigInteger maxFeePerGas) {
+            BigInteger maxFeePerGas,
+            List<AccessListObject> accessList) {
         super(EIP1559, nonce, null, gasLimit, to, value, data);
         this.chainId = chainId;
         this.maxPriorityFeePerGas = maxPriorityFeePerGas;
         this.maxFeePerGas = maxFeePerGas;
+        this.accessList = accessList;
     }
 
     @Override
@@ -83,7 +87,25 @@ public class Transaction1559 extends LegacyTransaction implements ITransaction {
         result.add(RlpString.create(data));
 
         // access list
-        result.add(new RlpList());
+        List<AccessListObject> accessList = getAccessList();
+        List<RlpType> rlpAccessList = new ArrayList<>();
+        accessList.forEach(
+                entry -> {
+                    List<RlpType> rlpAccessListObject = new ArrayList<>();
+                    rlpAccessListObject.add(
+                            RlpString.create(Numeric.hexStringToByteArray(entry.getAddress())));
+                    List<RlpType> keyList = new ArrayList<>();
+                    entry.getStorageKeys()
+                            .forEach(
+                                    key -> {
+                                        keyList.add(
+                                                RlpString.create(
+                                                        Numeric.hexStringToByteArray(key)));
+                                    });
+                    rlpAccessListObject.add(new RlpList(keyList));
+                    rlpAccessList.add(new RlpList(rlpAccessListObject));
+                });
+        result.add(new RlpList(rlpAccessList));
 
         if (signatureData != null) {
             result.add(RlpString.create(Sign.getRecId(signatureData, getChainId())));
@@ -103,7 +125,15 @@ public class Transaction1559 extends LegacyTransaction implements ITransaction {
             BigInteger maxPriorityFeePerGas,
             BigInteger maxFeePerGas) {
         return new Transaction1559(
-                chainId, nonce, gasLimit, to, value, "", maxPriorityFeePerGas, maxFeePerGas);
+                chainId,
+                nonce,
+                gasLimit,
+                to,
+                value,
+                "",
+                maxPriorityFeePerGas,
+                maxFeePerGas,
+                List.of());
     }
 
     public static Transaction1559 createTransaction(
@@ -114,10 +144,19 @@ public class Transaction1559 extends LegacyTransaction implements ITransaction {
             BigInteger value,
             String data,
             BigInteger maxPriorityFeePerGas,
-            BigInteger maxFeePerGas) {
+            BigInteger maxFeePerGas,
+            List<AccessListObject> accessList) {
 
         return new Transaction1559(
-                chainId, nonce, gasLimit, to, value, data, maxPriorityFeePerGas, maxFeePerGas);
+                chainId,
+                nonce,
+                gasLimit,
+                to,
+                value,
+                data,
+                maxPriorityFeePerGas,
+                maxFeePerGas,
+                accessList);
     }
 
     @Override
@@ -135,5 +174,9 @@ public class Transaction1559 extends LegacyTransaction implements ITransaction {
 
     public BigInteger getMaxFeePerGas() {
         return maxFeePerGas;
+    }
+
+    public List<AccessListObject> getAccessList() {
+        return accessList;
     }
 }
